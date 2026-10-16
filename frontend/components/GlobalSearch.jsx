@@ -27,7 +27,7 @@ export default function GlobalSearch({
   return (
     <form
       onSubmit={handleSubmit}
-      className={`flex items-center w-full h-full bg-white border border-gray-200 rounded-2xl px-6 shadow-sm ${className}`}
+      className={`flex items-center w-full h-full bg-white border  rounded-2xl px-6 shadow-sm ${className}`}
     >
       {/* Search Icon (Scaled up slightly for the bigger font) */}
       <svg
