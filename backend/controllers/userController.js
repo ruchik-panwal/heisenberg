@@ -6,7 +6,8 @@ export const getUserDashboard = async (req, res) => {
     const user = await User.findById(req.user._id);
     res.json({
       bookmarks: user.bookmarks,
-      history: user.history
+      history: user.history,
+      customMolecules: user.customMolecules // Added this so the frontend receives the sketches
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch dashboard" });
@@ -82,7 +83,7 @@ export const saveCustomMolecule = async (req, res) => {
     }
 
     // req.user is provided by your protect middleware
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     user.customMolecules.push({ name, smiles });

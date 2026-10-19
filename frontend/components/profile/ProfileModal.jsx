@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 
 export default function ProfileModal({ onClose }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("sketches"); // Default to new sketches tab
+  const [activeTab, setActiveTab] = useState("sketches"); 
   const [dashboardData, setDashboardData] = useState({ bookmarks: [], searchHistory: [], customMolecules: [] });
+  const [userInfo, setUserInfo] = useState({ name: "", email: "" });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,6 +16,12 @@ export default function ProfileModal({ onClose }) {
       if (!token) {
         setLoading(false);
         return;
+      }
+
+      // Quick fallback to local storage while API loads
+      const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+      if (localUser.name) {
+        setUserInfo({ name: localUser.name, email: localUser.email });
       }
 
       try {
@@ -26,11 +33,18 @@ export default function ProfileModal({ onClose }) {
         
         if (res.ok) {
           const data = await res.json();
-          // Merge fetched data with defaults to prevent mapping errors
+          const userData = data.user || data;
+
           setDashboardData({
-            bookmarks: data.bookmarks || [],
-            searchHistory: data.searchHistory || data.history || [],
-            customMolecules: data.customMolecules || []
+            bookmarks: userData.bookmarks || [],
+            searchHistory: userData.searchHistory || userData.history || [],
+            customMolecules: userData.customMolecules || []
+          });
+
+          // Update with fresh API data
+          setUserInfo({
+            name: userData.name || localUser.name || "User",
+            email: userData.email || localUser.email || ""
           });
         }
       } catch (error) {
@@ -46,7 +60,7 @@ export default function ProfileModal({ onClose }) {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.reload(); // Quick way to reset state and redirect
+    window.location.reload(); 
   };
 
   const handleOpenSketch = (smiles) => {
@@ -61,7 +75,6 @@ export default function ProfileModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      {/* Modal Container */}
       <div className="w-full max-w-4xl h-[75vh] min-h-[500px] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
@@ -78,6 +91,15 @@ export default function ProfileModal({ onClose }) {
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar Tabs */}
           <div className="w-56 bg-neutral-950/30 border-r border-neutral-800 flex flex-col p-4 gap-2">
+            
+            {/* Logged In Status Indicator */}
+            {!loading && userInfo.name && (
+              <div className="mb-4 px-3 py-2 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold mb-0.5">Active Session</p>
+                <p className="text-sm text-white font-semibold truncate">{userInfo.name}</p>
+              </div>
+            )}
+
             <SidebarButton name="sketches" label="Custom Sketches" activeTab={activeTab} setActiveTab={setActiveTab} />
             <SidebarButton name="bookmarks" label="Saved Medicines" activeTab={activeTab} setActiveTab={setActiveTab} />
             <SidebarButton name="history" label="Search History" activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -173,6 +195,22 @@ export default function ProfileModal({ onClose }) {
                 {activeTab === "settings" && (
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold text-white mb-6">Account Settings</h3>
+                    
+                    {/* Active Profile Card */}
+                    <div className="bg-neutral-800/40 border border-neutral-700/50 p-6 rounded-2xl flex items-center gap-5">
+                      <div className="h-14 w-14 rounded-full bg-blue-600 flex items-center justify-center text-xl font-bold text-white shadow-lg">
+                        {userInfo.name ? userInfo.name.charAt(0).toUpperCase() : "U"}
+                      </div>
+                      <div>
+                        <h4 className="text-white text-lg font-bold">{userInfo.name || "Chemist"}</h4>
+                        <p className="text-neutral-400 text-sm">{userInfo.email}</p>
+                        <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Online
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-2xl">
                       <h4 className="text-red-400 font-bold mb-2">Danger Zone</h4>
                       <p className="text-neutral-500 text-sm mb-6">Sign out of your account on this device. You will need to log back in to access your bookmarks and custom molecules.</p>

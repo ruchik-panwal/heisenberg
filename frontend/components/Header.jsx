@@ -15,8 +15,8 @@ export default function Header({ onOpenProfile }) {
         <Link href="/compound" >
           compounds
         </Link>
-        <Link href="/dictionary" >
-          dictionary
+        <Link href="/sketch" >
+          sketchbook
         </Link>
 
         {/* Profile Button */}

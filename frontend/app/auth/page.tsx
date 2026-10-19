@@ -40,7 +40,7 @@ export default function AuthPage() {
       localStorage.setItem("user", JSON.stringify({ name: data.name, email: data.email }));
       
       // Redirect to the dictionary or search page
-      router.push("/dictionary");
+      router.push("/");
       
     } catch (err) {
       setError(err.message);
